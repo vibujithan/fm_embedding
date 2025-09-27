@@ -78,7 +78,7 @@ class TorchDataset(Dataset):
         return torch.load(file_path)
 
 
-def create_pd_data_loaders(data_dir, batch_size=8, num_workers=4):
+def create_pd_data_loaders(data_dir, batch_size=8, num_workers=4, transform=None):
     """Create data loaders for PD dataset splits"""
 
     # Define paths
@@ -88,9 +88,9 @@ def create_pd_data_loaders(data_dir, batch_size=8, num_workers=4):
     images_dir = os.path.join(data_dir, "raw", "images")
 
     # Create datasets
-    train_dataset = PDDataset(train_csv, images_dir)
-    val_dataset = PDDataset(val_csv, images_dir)
-    test_dataset = PDDataset(test_csv, images_dir)
+    train_dataset = PDDataset(train_csv, images_dir, transform=transform)
+    val_dataset = PDDataset(val_csv, images_dir, transform=transform)
+    test_dataset = PDDataset(test_csv, images_dir, transform=transform)
 
     # Create data loaders
     train_loader = DataLoader(
