@@ -95,7 +95,7 @@ class PDDataset(Dataset):
 class ViTBackboneNet(nn.Module):
     """ViT backbone network for feature extraction"""
 
-    def __init__(self, simclr_ckpt_path):
+    def __init__(self, simclr_ckpt_path=None):
         super(ViTBackboneNet, self).__init__()
 
         # Create ViT backbone with same architecture as SimCLR
@@ -110,21 +110,24 @@ class ViTBackboneNet(nn.Module):
             save_attn=True,
         )
 
-        # Load pretrained weights from SimCLR checkpoint
-        ckpt = torch.load(simclr_ckpt_path, map_location="cpu", weights_only=False)
-        state_dict = ckpt.get("state_dict", ckpt)
+        # Load pretrained weights from SimCLR checkpoint if provided
+        if simclr_ckpt_path is not None:
+            ckpt = torch.load(simclr_ckpt_path, map_location="cpu", weights_only=False)
+            state_dict = ckpt.get("state_dict", ckpt)
 
-        # Extract only backbone weights from SimCLR checkpoint
-        backbone_state_dict = {}
-        for key, value in state_dict.items():
-            if key.startswith("backbone."):
-                # Remove "backbone." prefix
-                new_key = key[9:]  # len("backbone.") = 9
-                backbone_state_dict[new_key] = value
+            # Extract only backbone weights from SimCLR checkpoint
+            backbone_state_dict = {}
+            for key, value in state_dict.items():
+                if key.startswith("backbone."):
+                    # Remove "backbone." prefix
+                    new_key = key[9:]  # len("backbone.") = 9
+                    backbone_state_dict[new_key] = value
 
-        # Load the backbone weights
-        self.backbone.load_state_dict(backbone_state_dict, strict=True)
-        print("Backbone weights loaded!!")
+            # Load the backbone weights
+            self.backbone.load_state_dict(backbone_state_dict, strict=True)
+            print("Backbone weights loaded!!")
+        else:
+            print("No checkpoint provided - using randomly initialized weights")
 
     def forward(self, x):
         # Get features from ViT backbone
@@ -143,16 +146,18 @@ class ViTBackboneNet(nn.Module):
 # =========================
 
 
-def load_brainiac(checkpoint_path, device="cuda"):
+def load_brainiac(checkpoint_path=None, device="cuda"):
     """
     Load the ViT backbone model and BrainIAC checkpoint.
 
     Args:
-        checkpoint_path (str): Path to the model checkpoint
+        checkpoint_path (str, optional): Path to the model checkpoint. 
+                                        If None, returns randomly initialized model.
         device (str): Device to load the model on ('cuda' or 'cpu')
 
     Returns:
-        model: Loaded ViT backbone model with checkpoint weights
+        model: Loaded ViT backbone model (with checkpoint weights if provided, 
+               otherwise randomly initialized)
     """
     # Create ViT backbone model - the constructor handles checkpoint loading
     model = ViTBackboneNet(checkpoint_path)

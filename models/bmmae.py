@@ -366,7 +366,7 @@ class ViTEncoder(nn.Module):
             trunc_normal_(self.cls_token, std=0.02)
 
     @classmethod
-    def from_pretrained(cls, model_filename: str = "bmmae.pth") -> "ViTEncoder":
+    def from_pretrained(cls, model_filename: str = "bmmae.pth", random_init: bool = False) -> "ViTEncoder":
         from huggingface_hub import hf_hub_download
 
         # Download weights from Hub
@@ -387,8 +387,12 @@ class ViTEncoder(nn.Module):
         )
 
         # Equip model with weights
-        state_dict = torch.load(filepath, map_location="cpu")
-        model.load_state_dict(state_dict, strict=False)
+        if not random_init:
+            state_dict = torch.load(filepath, map_location="cpu")
+            model.load_state_dict(state_dict, strict=False)
+        else:
+            print("Using randomly initialized weights")
+            
         return model
 
     def forward(self, x: Union[Dict[str, torch.Tensor], torch.Tensor]):
